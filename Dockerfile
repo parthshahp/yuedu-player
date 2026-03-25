@@ -1,6 +1,7 @@
 # ---- base: system deps shared across all stages ----
 FROM node:20-slim AS base
 RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates \
       ffmpeg \
       curl \
     && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
