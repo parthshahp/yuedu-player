@@ -1,12 +1,10 @@
-export type FieldSource = 'word' | 'pinyin' | 'definition' | 'expression' | ''
+export type FieldSource = 'word' | 'pinyin' | 'definition' | 'expression' | 'audio' | ''
 
 export interface AnkiSettings {
   deck: string
   model: string
   // maps each Anki field name → which value to fill it with
   fieldMap: Record<string, FieldSource>
-  // which field receives the audio clip — '' means no audio
-  audioField: string
 }
 
 const KEY = 'vocab-miner:anki-settings'
@@ -30,6 +28,7 @@ export const FIELD_SOURCE_LABELS: Record<FieldSource, string> = {
   pinyin: 'Pinyin',
   definition: 'Definition',
   expression: 'Expression (subtitle)',
+  audio: 'Audio clip',
   '': '— none —',
 }
 
@@ -39,7 +38,12 @@ export function buildFields(
 ): Record<string, string> {
   const result: Record<string, string> = {}
   for (const [field, source] of Object.entries(fieldMap)) {
-    result[field] = source ? values[source] : ''
+    if (!source || source === 'audio') continue
+    result[field] = values[source]
   }
   return result
+}
+
+export function getAudioField(fieldMap: Record<string, FieldSource>): string | undefined {
+  return Object.entries(fieldMap).find(([, src]) => src === 'audio')?.[0]
 }

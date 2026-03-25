@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import {
   loadAnkiSettings,
   saveAnkiSettings,
@@ -13,12 +14,32 @@ import {
 const SOURCES = Object.keys(FIELD_SOURCE_LABELS) as FieldSource[]
 
 export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+      <SettingsContent />
+    </Suspense>
+  )
+}
+
+function SettingsContent() {
+  const router = useRouter()
+  const params = useSearchParams()
+  const fromUrl = params.get('from')
+
   const [decks, setDecks] = useState<string[]>([])
   const [models, setModels] = useState<string[]>([])
   const [fields, setFields] = useState<string[]>([])
-  const [settings, setSettings] = useState<AnkiSettings>({ deck: '', model: '', fieldMap: {}, audioField: '' })
+  const [settings, setSettings] = useState<AnkiSettings>({ deck: '', model: '', fieldMap: {} })
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'saved'>('loading')
   const [ankiError, setAnkiError] = useState<string | null>(null)
+
+  function handleBack() {
+    if (fromUrl) {
+      router.push(fromUrl)
+    } else {
+      router.back()
+    }
+  }
 
   // Load decks + models on mount, restore saved settings
   useEffect(() => {
@@ -68,9 +89,7 @@ export default function SettingsPage() {
           for (const f of data.fields) {
             newMap[f] = s.fieldMap[f] ?? ''
           }
-          // Reset audioField if it no longer exists in the new model's fields
-          const audioField = data.fields.includes(s.audioField) ? s.audioField : ''
-          return { ...s, fieldMap: newMap, audioField }
+          return { ...s, fieldMap: newMap }
         })
       })
   }, [settings.model])
@@ -84,11 +103,11 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <header className="flex items-center gap-3 px-4 py-4 border-b border-white/10">
-        <Link href="/" className="text-white/50 hover:text-white transition-colors">
+        <button onClick={handleBack} className="text-white/50 hover:text-white transition-colors">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
             <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
           </svg>
-        </Link>
+        </button>
         <h1 className="text-lg font-semibold">Anki Settings</h1>
       </header>
 
@@ -169,26 +188,6 @@ export default function SettingsPage() {
                     </div>
                   ))}
                 </div>
-              </section>
-            )}
-
-            {/* Audio clip field */}
-            {fields.length > 0 && (
-              <section>
-                <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-2">
-                  Audio Clip Field
-                </label>
-                <p className="text-xs text-white/30 mb-2">Which field receives the sentence audio clip.</p>
-                <select
-                  value={settings.audioField}
-                  onChange={(e) => setSettings((s) => ({ ...s, audioField: e.target.value }))}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base appearance-none focus:outline-none focus:border-white/30"
-                >
-                  <option value="" className="bg-neutral-900">— none —</option>
-                  {fields.map((f) => (
-                    <option key={f} value={f} className="bg-neutral-900">{f}</option>
-                  ))}
-                </select>
               </section>
             )}
 

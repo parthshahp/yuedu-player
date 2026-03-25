@@ -80,7 +80,7 @@ function Player({ videoId }: { videoId: string }) {
         fetch('/api/segment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ texts: segments.map((s) => s.text) }),
+          body: JSON.stringify({ videoId, segments }),
         })
           .then((r) => r.json() as Promise<{ results: string[][] }>)
           .then(({ results }) =>
@@ -108,23 +108,23 @@ function Player({ videoId }: { videoId: string }) {
     if (isPlaying) pause(); else play()
   }
 
+  // Save video to library on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('vocab-miner:library')
+      const library: { videoId: string; addedAt: number }[] = raw ? JSON.parse(raw) : []
+      const filtered = library.filter((e) => e.videoId !== videoId)
+      filtered.unshift({ videoId, addedAt: Date.now() })
+      localStorage.setItem('vocab-miner:library', JSON.stringify(filtered.slice(0, 20)))
+    } catch {}
+  }, [videoId])
+
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
-      <div className="absolute top-2 right-2 z-10">
-        <Link
-          href="/settings"
-          className="flex items-center justify-center w-9 h-9 rounded-full bg-black/60 text-white/40 hover:text-white transition-colors"
-          aria-label="Settings"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-          </svg>
-        </Link>
-      </div>
       <div className="w-full aspect-video">
         <div ref={containerRef} className="w-full h-full" />
       </div>
-      <MediaControls isPlaying={isPlaying} onPlayPause={handlePlayPause} onSeekBy={seekBy} />
+      <MediaControls isPlaying={isPlaying} onPlayPause={handlePlayPause} onSeekBy={seekBy} videoId={videoId} />
       <div className="flex-1 flex flex-col overflow-hidden">
         {transcriptState === 'loading' && (
           <div className="p-4 text-white/50">Loading transcript…</div>
@@ -159,13 +159,33 @@ function MediaControls({
   isPlaying,
   onPlayPause,
   onSeekBy,
+  videoId,
 }: {
   isPlaying: boolean
   onPlayPause: () => void
   onSeekBy: (delta: number) => void
+  videoId: string
 }) {
   return (
-    <div className="flex items-center justify-center gap-2 bg-black/90 border-t border-white/10 py-3">
+    <div className="relative flex items-center justify-center gap-2 bg-black/90 border-t border-white/10 py-3">
+      <Link
+        href="/"
+        className="absolute left-3 flex items-center justify-center w-10 h-10 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+        aria-label="Home"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+      </Link>
+      <Link
+        href={`/settings?from=/player?v=${videoId}`}
+        className="absolute right-3 flex items-center justify-center w-10 h-10 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+        aria-label="Settings"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+        </svg>
+      </Link>
       <button
         onClick={() => onSeekBy(-5)}
         className="relative flex items-center justify-center w-12 h-12 rounded-full text-white/70 hover:text-white hover:bg-white/10 active:bg-white/20 transition-colors"
