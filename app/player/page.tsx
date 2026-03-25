@@ -54,6 +54,16 @@ function Player({ videoId }: { videoId: string }) {
   const segments = segmentedLines.map((l) => l.segment)
   const activeIndex = useSubtitleSync(segments, currentTime)
 
+  // Kick off audio prefetch in the background as soon as the player is ready
+  useEffect(() => {
+    if (!isReady) return
+    fetch('/api/anki/prefetch-audio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ videoId }),
+    }).catch(() => { /* best-effort */ })
+  }, [isReady, videoId])
+
   useEffect(() => {
     if (!isReady) return
     setTranscriptState('loading')
@@ -92,6 +102,7 @@ function Player({ videoId }: { videoId: string }) {
   }, [lookup, pause])
 
   const activeSentence = activeIndex >= 0 ? (segmentedLines[activeIndex]?.segment.text ?? '') : ''
+  const activeSegment = activeIndex >= 0 ? (segmentedLines[activeIndex]?.segment ?? null) : null
 
   function handlePlayPause() {
     if (isPlaying) pause(); else play()
@@ -136,6 +147,9 @@ function Player({ videoId }: { videoId: string }) {
         sentence={activeSentence}
         open={sheetOpen}
         onClose={() => { setSheetOpen(false); play() }}
+        videoId={videoId}
+        segmentStart={activeSegment?.start}
+        segmentDuration={activeSegment?.duration}
       />
     </div>
   )

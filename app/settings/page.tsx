@@ -16,7 +16,7 @@ export default function SettingsPage() {
   const [decks, setDecks] = useState<string[]>([])
   const [models, setModels] = useState<string[]>([])
   const [fields, setFields] = useState<string[]>([])
-  const [settings, setSettings] = useState<AnkiSettings>({ deck: '', model: '', fieldMap: {} })
+  const [settings, setSettings] = useState<AnkiSettings>({ deck: '', model: '', fieldMap: {}, audioField: '' })
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'saved'>('loading')
   const [ankiError, setAnkiError] = useState<string | null>(null)
 
@@ -68,7 +68,9 @@ export default function SettingsPage() {
           for (const f of data.fields) {
             newMap[f] = s.fieldMap[f] ?? ''
           }
-          return { ...s, fieldMap: newMap }
+          // Reset audioField if it no longer exists in the new model's fields
+          const audioField = data.fields.includes(s.audioField) ? s.audioField : ''
+          return { ...s, fieldMap: newMap, audioField }
         })
       })
   }, [settings.model])
@@ -167,6 +169,26 @@ export default function SettingsPage() {
                     </div>
                   ))}
                 </div>
+              </section>
+            )}
+
+            {/* Audio clip field */}
+            {fields.length > 0 && (
+              <section>
+                <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-2">
+                  Audio Clip Field
+                </label>
+                <p className="text-xs text-white/30 mb-2">Which field receives the sentence audio clip.</p>
+                <select
+                  value={settings.audioField}
+                  onChange={(e) => setSettings((s) => ({ ...s, audioField: e.target.value }))}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base appearance-none focus:outline-none focus:border-white/30"
+                >
+                  <option value="" className="bg-neutral-900">— none —</option>
+                  {fields.map((f) => (
+                    <option key={f} value={f} className="bg-neutral-900">{f}</option>
+                  ))}
+                </select>
               </section>
             )}
 

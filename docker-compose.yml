@@ -1,0 +1,13 @@
+services:
+  app:
+    image: ghcr.io/parthshahp/yuedu-player:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - ANKI_CONNECT_URL=${ANKI_CONNECT_URL:-http://host.docker.internal:8765}
+    volumes:
+      - vocab-audio:/tmp/vocab-miner
+    restart: unless-stopped
+
+volumes:
+  vocab-audio:

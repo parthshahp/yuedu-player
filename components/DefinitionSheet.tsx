@@ -10,9 +10,12 @@ interface DefinitionSheetProps {
   sentence: string
   open: boolean
   onClose: () => void
+  videoId?: string
+  segmentStart?: number
+  segmentDuration?: number
 }
 
-export function DefinitionSheet({ entry, sentence, open, onClose }: DefinitionSheetProps) {
+export function DefinitionSheet({ entry, sentence, open, onClose, videoId, segmentStart, segmentDuration }: DefinitionSheetProps) {
   const [addState, setAddState] = useState<'idle' | 'loading' | 'added' | 'error'>('idle')
   const [addError, setAddError] = useState<string | null>(null)
 
@@ -45,6 +48,10 @@ export function DefinitionSheet({ entry, sentence, open, onClose }: DefinitionSh
           deckName: settings.deck,
           modelName: settings.model,
           fields: buildFields(settings.fieldMap, values),
+          audioField: settings.audioField || undefined,
+          videoId,
+          segmentStart,
+          segmentDuration,
         }),
       })
       const data = await res.json()

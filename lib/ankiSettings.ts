@@ -5,6 +5,8 @@ export interface AnkiSettings {
   model: string
   // maps each Anki field name → which value to fill it with
   fieldMap: Record<string, FieldSource>
+  // which field receives the audio clip — '' means no audio
+  audioField: string
 }
 
 const KEY = 'vocab-miner:anki-settings'
