@@ -1,7 +1,8 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  serverExternalPackages: ['@node-rs/jieba', 'cc-cedict'],
+  allowedDevOrigins: ['parths-macbook-pro'],
+}
 
-export default nextConfig;
+export default nextConfig
