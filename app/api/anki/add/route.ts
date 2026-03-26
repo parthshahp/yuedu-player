@@ -3,7 +3,7 @@ import { existsSync, readFileSync, readdirSync, unlinkSync } from 'fs'
 import path from 'path'
 
 const ANKI_URL = process.env.ANKI_CONNECT_URL ?? 'http://localhost:8765'
-const CACHE_DIR = '/tmp/vocab-miner'
+const CACHE_DIR = process.env.AUDIO_CACHE_DIR ?? path.join(process.cwd(), 'data', 'audio-cache')
 
 function findCachedAudio(videoId: string): string | null {
   if (!existsSync(CACHE_DIR)) return null
