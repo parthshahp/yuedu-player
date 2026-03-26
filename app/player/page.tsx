@@ -174,6 +174,21 @@ function MediaControls({
   onSeekBy: (delta: number) => void
   videoId: string
 }) {
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle')
+
+  async function handleSync() {
+    if (syncStatus === 'syncing') return
+    setSyncStatus('syncing')
+    try {
+      const res = await fetch('/api/anki/sync', { method: 'POST' })
+      const data = await res.json()
+      setSyncStatus(!res.ok || data.error ? 'error' : 'done')
+    } catch {
+      setSyncStatus('error')
+    }
+    setTimeout(() => setSyncStatus('idle'), 2000)
+  }
+
   return (
     <div className="relative flex items-center justify-center gap-2 bg-black/90 border-t border-white/10 py-3">
       <Link
@@ -185,6 +200,29 @@ function MediaControls({
           <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
         </svg>
       </Link>
+      <button
+        onClick={handleSync}
+        className="absolute right-14 flex items-center justify-center w-10 h-10 rounded-full transition-colors"
+        aria-label="Sync with AnkiWeb"
+        title={syncStatus === 'error' ? 'Sync failed' : 'Sync with AnkiWeb'}
+      >
+        {syncStatus === 'done' ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-green-400">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+        ) : syncStatus === 'error' ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-red-400">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+        ) : (
+          <svg
+            width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
+            className={`${syncStatus === 'syncing' ? 'animate-spin text-white' : 'text-white/40 hover:text-white'}`}
+          >
+            <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+          </svg>
+        )}
+      </button>
       <Link
         href={`/settings?from=/player?v=${videoId}`}
         className="absolute right-3 flex items-center justify-center w-10 h-10 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
