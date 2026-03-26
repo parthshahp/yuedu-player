@@ -32,6 +32,8 @@ function SettingsContent() {
   const [settings, setSettings] = useState<AnkiSettings>({ deck: '', model: '', fieldMap: {} })
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'saved'>('loading')
   const [ankiError, setAnkiError] = useState<string | null>(null)
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle')
+  const [syncError, setSyncError] = useState<string | null>(null)
 
   function handleBack() {
     if (fromUrl) {
@@ -105,6 +107,25 @@ function SettingsContent() {
     saveAnkiSettings(settings)
     setStatus('saved')
     setTimeout(() => setStatus('idle'), 2000)
+  }
+
+  async function handleSync() {
+    setSyncStatus('syncing')
+    setSyncError(null)
+    try {
+      const res = await fetch('/api/anki/sync', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        setSyncError(data.error ?? 'Sync failed')
+        setSyncStatus('error')
+      } else {
+        setSyncStatus('done')
+        setTimeout(() => setSyncStatus('idle'), 2000)
+      }
+    } catch {
+      setSyncError('Could not reach AnkiConnect')
+      setSyncStatus('error')
+    }
   }
 
   return (
@@ -211,6 +232,21 @@ function SettingsContent() {
             >
               {status === 'saved' ? 'Saved!' : 'Save'}
             </button>
+
+            <div className="space-y-2">
+              <button
+                onClick={handleSync}
+                disabled={syncStatus === 'syncing'}
+                className="w-full py-3.5 rounded-xl border border-white/10 text-white font-semibold text-base disabled:opacity-30 active:scale-95 transition-all hover:bg-white/5"
+              >
+                {syncStatus === 'syncing' && 'Syncing…'}
+                {syncStatus === 'done' && '✓ Synced'}
+                {(syncStatus === 'idle' || syncStatus === 'error') && 'Sync with AnkiWeb'}
+              </button>
+              {syncStatus === 'error' && syncError && (
+                <p className="text-sm text-red-400 text-center">{syncError}</p>
+              )}
+            </div>
           </>
         )}
       </div>
