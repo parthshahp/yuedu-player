@@ -110,13 +110,21 @@ function Player({ videoId }: { videoId: string }) {
 
   // Save video to library on mount
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('vocab-miner:library')
-      const library: { videoId: string; addedAt: number }[] = raw ? JSON.parse(raw) : []
-      const filtered = library.filter((e) => e.videoId !== videoId)
-      filtered.unshift({ videoId, addedAt: Date.now() })
-      localStorage.setItem('vocab-miner:library', JSON.stringify(filtered.slice(0, 20)))
-    } catch {}
+    async function saveToLibrary() {
+      let title: string | undefined
+      try {
+        const res = await fetch(`/api/title?v=${videoId}`)
+        if (res.ok) title = (await res.json()).title
+      } catch {}
+      try {
+        const raw = localStorage.getItem('vocab-miner:library')
+        const library: { videoId: string; addedAt: number; title?: string }[] = raw ? JSON.parse(raw) : []
+        const filtered = library.filter((e) => e.videoId !== videoId)
+        filtered.unshift({ videoId, addedAt: Date.now(), ...(title ? { title } : {}) })
+        localStorage.setItem('vocab-miner:library', JSON.stringify(filtered.slice(0, 20)))
+      } catch {}
+    }
+    saveToLibrary()
   }, [videoId])
 
   return (

@@ -41,8 +41,9 @@ function SettingsContent() {
     }
   }
 
-  // Load decks + models on mount, restore saved settings
-  useEffect(() => {
+  function loadFromAnki() {
+    setStatus('loading')
+    setAnkiError(null)
     const saved = loadAnkiSettings()
 
     Promise.all([
@@ -73,6 +74,12 @@ function SettingsContent() {
         setAnkiError('Could not reach AnkiConnect. Is Anki open with the AnkiConnect add-on installed?')
         setStatus('error')
       })
+  }
+
+  // Load decks + models on mount, restore saved settings
+  useEffect(() => {
+    loadFromAnki()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Fetch fields whenever model changes
@@ -113,8 +120,14 @@ function SettingsContent() {
 
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-8 max-w-lg mx-auto w-full">
         {status === 'error' && (
-          <div className="rounded-xl bg-red-950/60 border border-red-800 px-4 py-3 text-sm text-red-300">
-            {ankiError}
+          <div className="rounded-xl bg-red-950/60 border border-red-800 px-4 py-4 text-sm text-red-300 flex flex-col gap-3">
+            <p>{ankiError}</p>
+            <button
+              onClick={loadFromAnki}
+              className="self-start rounded-lg border border-red-700 px-3 py-1.5 text-red-300 hover:bg-red-900/40 transition-colors text-xs font-medium"
+            >
+              Retry
+            </button>
           </div>
         )}
 

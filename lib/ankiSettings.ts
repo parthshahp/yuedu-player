@@ -1,4 +1,4 @@
-export type FieldSource = 'word' | 'pinyin' | 'definition' | 'expression' | 'audio' | ''
+export type FieldSource = 'word' | 'pinyin' | 'definition' | 'expression' | 'audio' | 'picture' | ''
 
 export interface AnkiSettings {
   deck: string
@@ -29,6 +29,7 @@ export const FIELD_SOURCE_LABELS: Record<FieldSource, string> = {
   definition: 'Definition',
   expression: 'Expression (subtitle)',
   audio: 'Audio clip',
+  picture: 'Thumbnail (picture)',
   '': '— none —',
 }
 
@@ -38,7 +39,7 @@ export function buildFields(
 ): Record<string, string> {
   const result: Record<string, string> = {}
   for (const [field, source] of Object.entries(fieldMap)) {
-    if (!source || source === 'audio') continue
+    if (!source || source === 'audio' || source === 'picture') continue
     result[field] = values[source]
   }
   return result
@@ -46,4 +47,8 @@ export function buildFields(
 
 export function getAudioField(fieldMap: Record<string, FieldSource>): string | undefined {
   return Object.entries(fieldMap).find(([, src]) => src === 'audio')?.[0]
+}
+
+export function getPictureField(fieldMap: Record<string, FieldSource>): string | undefined {
+  return Object.entries(fieldMap).find(([, src]) => src === 'picture')?.[0]
 }

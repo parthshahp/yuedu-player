@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Drawer } from 'vaul'
 import type { DictEntry } from '@/lib/types'
-import { loadAnkiSettings, buildFields, getAudioField } from '@/lib/ankiSettings'
+import { loadAnkiSettings, buildFields, getAudioField, getPictureField } from '@/lib/ankiSettings'
 
 interface DefinitionSheetProps {
   entry: DictEntry | null
@@ -49,6 +49,7 @@ export function DefinitionSheet({ entry, sentence, open, onClose, videoId, segme
           modelName: settings.model,
           fields: buildFields(settings.fieldMap, values),
           audioField: getAudioField(settings.fieldMap),
+          pictureField: getPictureField(settings.fieldMap),
           videoId,
           segmentStart,
           segmentDuration,

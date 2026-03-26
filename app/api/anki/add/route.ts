@@ -16,7 +16,7 @@ function findCachedAudio(videoId: string): string | null {
 }
 
 export async function POST(req: Request) {
-  const { deckName, modelName, fields, audioField, videoId, segmentStart, segmentDuration } =
+  const { deckName, modelName, fields, audioField, pictureField, videoId, segmentStart, segmentDuration } =
     await req.json()
 
   const note: Record<string, unknown> = {
@@ -54,6 +54,24 @@ export async function POST(req: Request) {
       } catch {
         // Continue without audio — clip extraction is best-effort
       }
+    }
+  }
+
+  // Attach thumbnail if a picture field is configured
+  if (pictureField && videoId) {
+    try {
+      const imgRes = await fetch(`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`)
+      if (imgRes.ok) {
+        const buf = await imgRes.arrayBuffer()
+        const b64 = Buffer.from(buf).toString('base64')
+        note.picture = [{
+          filename: `vocab-miner_${videoId}_thumb.jpg`,
+          data: b64,
+          fields: [pictureField],
+        }]
+      }
+    } catch {
+      // best-effort
     }
   }
 
