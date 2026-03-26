@@ -2,7 +2,7 @@ import { spawn } from 'child_process'
 import { existsSync, mkdirSync, readdirSync } from 'fs'
 import path from 'path'
 
-const CACHE_DIR = '/tmp/vocab-miner'
+const CACHE_DIR = process.env.AUDIO_CACHE_DIR ?? path.join(process.cwd(), 'data', 'audio-cache')
 
 // Tracks in-progress downloads for the lifetime of the server process
 const downloading = new Set<string>()

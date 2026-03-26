@@ -28,6 +28,8 @@ export function useYouTubePlayer(videoId: string) {
   useEffect(() => {
     if (!videoId) return
 
+    const positionKey = `vocab-miner:position:${videoId}`
+
     function createPlayer() {
       if (!containerRef.current) return
       playerRef.current = new window.YT.Player(containerRef.current, {
@@ -37,7 +39,11 @@ export function useYouTubePlayer(videoId: string) {
           'ytp-pause-overlay': 0,
         },
         events: {
-          onReady: () => setIsReady(true),
+          onReady: () => {
+            const saved = parseFloat(localStorage.getItem(positionKey) ?? '0')
+            if (saved > 0) playerRef.current?.seekTo(saved, true)
+            setIsReady(true)
+          },
         },
       })
     }
@@ -64,6 +70,8 @@ export function useYouTubePlayer(videoId: string) {
   useEffect(() => {
     if (!isReady) return
 
+    const positionKey = `vocab-miner:position:${videoId}`
+
     // Slow poll (250ms) — only to anchor the interpolation clock and detect
     // play/pause state. We do NOT use the raw polled value directly for subtitles.
     const pollId = setInterval(() => {
@@ -76,6 +84,8 @@ export function useYouTubePlayer(videoId: string) {
       lastPollWallRef.current = performance.now()
       playbackRateRef.current = rate
       setIsPlaying(playing)
+
+      if (t > 0) localStorage.setItem(positionKey, String(t))
     }, 250)
 
     // Fast rAF loop — interpolates between anchored readings so the subtitle
