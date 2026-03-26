@@ -6,10 +6,8 @@ services:
     environment:
       - ANKI_CONNECT_URL=${ANKI_CONNECT_URL:-http://host.docker.internal:8765}
     volumes:
-      - vocab-audio:/tmp/vocab-miner
-      - vocab-transcripts:/app/data
+      - vocab-data:/app/data
     restart: unless-stopped
 
 volumes:
-  vocab-audio:
-  vocab-transcripts:
+  vocab-data:
