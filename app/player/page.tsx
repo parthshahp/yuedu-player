@@ -128,12 +128,23 @@ function Player({ videoId }: { videoId: string }) {
   }, [videoId])
 
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white">
-      <div className="w-full aspect-video">
+    <div className="flex min-h-screen flex-col bg-black text-white landscape:h-screen landscape:min-h-0">
+      <div className="relative w-full aspect-video landscape:aspect-auto landscape:flex-1">
         <div ref={containerRef} className="w-full h-full" />
+        {/* Subtitle overlay — landscape only */}
+        {transcriptState === 'idle' && segmentedLines.length > 0 && (
+          <div className="hidden landscape:block absolute bottom-0 left-0 right-0 pointer-events-auto">
+            <SubtitlePanel
+              line={activeIndex >= 0 ? segmentedLines[activeIndex] ?? null : null}
+              onWordTap={handleWordTap}
+              overlay
+            />
+          </div>
+        )}
       </div>
       <MediaControls isPlaying={isPlaying} onPlayPause={handlePlayPause} onSeekBy={seekBy} videoId={videoId} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Subtitle area below — portrait only */}
+      <div className="flex-1 flex flex-col overflow-hidden landscape:hidden">
         {transcriptState === 'loading' && (
           <div className="p-4 text-white/50">Loading transcript…</div>
         )}

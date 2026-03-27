@@ -6,6 +6,7 @@ import { WordToken } from './WordToken'
 interface SubtitlePanelProps {
   line: SegmentedLine | null
   onWordTap: (word: string) => void
+  overlay?: boolean
 }
 
 // Split a jieba word into { prefix, core, suffix } where prefix/suffix are
@@ -20,13 +21,19 @@ function hasContent(s: string): boolean {
   return /[\p{L}\p{N}]/u.test(s)
 }
 
-export function SubtitlePanel({ line, onWordTap }: SubtitlePanelProps) {
+export function SubtitlePanel({ line, onWordTap, overlay }: SubtitlePanelProps) {
   return (
-    <div className="flex-1 flex items-start justify-center px-6 pt-6 pb-4 min-h-24">
+    <div className={overlay
+      ? "w-full px-6 pt-10 pb-5 bg-gradient-to-t from-black/80 to-transparent"
+      : "flex-1 flex items-start justify-center px-6 pt-6 pb-4 min-h-24"
+    }>
       {line && (
         <p
           key={line.segment.start}
-          className="text-white text-4xl font-medium text-center leading-relaxed"
+          className={overlay
+            ? "text-white text-4xl font-medium text-center leading-relaxed [text-shadow:0_2px_12px_rgba(0,0,0,1)]"
+            : "text-white text-4xl font-medium text-center leading-relaxed"
+          }
         >
           {line.words.map((word, j) => {
             const { prefix, core, suffix } = splitWord(word)
