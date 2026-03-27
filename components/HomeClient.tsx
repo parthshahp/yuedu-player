@@ -127,8 +127,8 @@ export function HomeClient({ initialLibrary }: { initialLibrary: LibraryEntry[] 
                   </button>
                   <button
                     onClick={() => removeFromLibrary(id)}
-                    className="absolute top-1.5 right-1.5 flex items-center justify-center w-6 h-6 rounded-full bg-black/70 text-white/50 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-label="Remove from library"
+                    className="absolute top-1.5 right-1.5 flex items-center justify-center w-6 h-6 rounded-full bg-black/70 text-white/50 hover:text-white transition-colors"
+                    aria-label="Delete video"
                   >
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
