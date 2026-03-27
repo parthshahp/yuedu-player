@@ -116,13 +116,11 @@ function Player({ videoId }: { videoId: string }) {
         const res = await fetch(`/api/title?v=${videoId}`)
         if (res.ok) title = (await res.json()).title
       } catch {}
-      try {
-        const raw = localStorage.getItem('vocab-miner:library')
-        const library: { videoId: string; addedAt: number; title?: string }[] = raw ? JSON.parse(raw) : []
-        const filtered = library.filter((e) => e.videoId !== videoId)
-        filtered.unshift({ videoId, addedAt: Date.now(), ...(title ? { title } : {}) })
-        localStorage.setItem('vocab-miner:library', JSON.stringify(filtered.slice(0, 20)))
-      } catch {}
+      fetch('/api/library', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId, ...(title ? { title } : {}) }),
+      }).catch(() => { /* best-effort */ })
     }
     saveToLibrary()
   }, [videoId])
