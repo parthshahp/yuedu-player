@@ -118,6 +118,11 @@ export function useYouTubePlayer(videoId: string) {
     lastPolledTimeRef.current = t + delta
     lastPollWallRef.current = performance.now()
   }
+  const seekTo = (time: number) => {
+    playerRef.current?.seekTo(time, true)
+    lastPolledTimeRef.current = time
+    lastPollWallRef.current = performance.now()
+  }
 
-  return { containerRef, currentTime, isReady, isPlaying, play, pause, seekBy }
+  return { containerRef, currentTime, isReady, isPlaying, play, pause, seekBy, seekTo }
 }

@@ -42,7 +42,7 @@ function PlayerContent() {
 }
 
 function Player({ videoId }: { videoId: string }) {
-  const { containerRef, currentTime, isReady, isPlaying, play, pause, seekBy } = useYouTubePlayer(videoId)
+  const { containerRef, currentTime, isReady, isPlaying, play, pause, seekTo } = useYouTubePlayer(videoId)
   const { lookup } = useDictionary()
   const [segmentedLines, setSegmentedLines] = useState<SegmentedLine[]>([])
   const [transcriptState, setTranscriptState] = useState<'idle' | 'loading' | 'error'>('idle')
@@ -108,6 +108,21 @@ function Player({ videoId }: { videoId: string }) {
     if (isPlaying) pause(); else play()
   }
 
+  const seekToSubtitle = useCallback((direction: -1 | 1) => {
+    if (segments.length === 0) return
+    // Floor search: last subtitle whose start <= currentTime (ignoring tail gap)
+    let lo = 0, hi = segments.length - 1, floor = -1
+    while (lo <= hi) {
+      const mid = (lo + hi) >>> 1
+      if (segments[mid].start <= currentTime) { floor = mid; lo = mid + 1 }
+      else hi = mid - 1
+    }
+    const target = direction === -1
+      ? Math.max(0, floor - 1)
+      : floor < 0 ? 0 : Math.min(segments.length - 1, floor + 1)
+    seekTo(segments[target].start)
+  }, [segments, currentTime, seekTo])
+
   // Save video to library on mount
   useEffect(() => {
     async function saveToLibrary() {
@@ -140,7 +155,7 @@ function Player({ videoId }: { videoId: string }) {
           </div>
         )}
       </div>
-      <MediaControls isPlaying={isPlaying} onPlayPause={handlePlayPause} onSeekBy={seekBy} videoId={videoId} />
+      <MediaControls isPlaying={isPlaying} onPlayPause={handlePlayPause} onPrevSubtitle={() => seekToSubtitle(-1)} onNextSubtitle={() => seekToSubtitle(1)} videoId={videoId} />
       {/* Subtitle area below — portrait only */}
       <div className="flex-1 flex flex-col overflow-hidden landscape:hidden">
         {transcriptState === 'loading' && (
@@ -175,12 +190,14 @@ function Player({ videoId }: { videoId: string }) {
 function MediaControls({
   isPlaying,
   onPlayPause,
-  onSeekBy,
+  onPrevSubtitle,
+  onNextSubtitle,
   videoId,
 }: {
   isPlaying: boolean
   onPlayPause: () => void
-  onSeekBy: (delta: number) => void
+  onPrevSubtitle: () => void
+  onNextSubtitle: () => void
   videoId: string
 }) {
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle')
@@ -242,14 +259,13 @@ function MediaControls({
         </svg>
       </Link>
       <button
-        onClick={() => onSeekBy(-5)}
-        className="relative flex items-center justify-center w-12 h-12 rounded-full text-white/70 hover:text-white hover:bg-white/10 active:bg-white/20 transition-colors"
-        aria-label="Rewind 5 seconds"
+        onClick={onPrevSubtitle}
+        className="flex items-center justify-center w-12 h-12 rounded-full text-white/70 hover:text-white hover:bg-white/10 active:bg-white/20 transition-colors"
+        aria-label="Previous subtitle"
       >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
           <path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
         </svg>
-        <span className="absolute text-[9px] font-bold" style={{ bottom: '9px', right: '6px' }}>5</span>
       </button>
 
       <button
@@ -270,14 +286,13 @@ function MediaControls({
       </button>
 
       <button
-        onClick={() => onSeekBy(5)}
-        className="relative flex items-center justify-center w-12 h-12 rounded-full text-white/70 hover:text-white hover:bg-white/10 active:bg-white/20 transition-colors"
-        aria-label="Forward 5 seconds"
+        onClick={onNextSubtitle}
+        className="flex items-center justify-center w-12 h-12 rounded-full text-white/70 hover:text-white hover:bg-white/10 active:bg-white/20 transition-colors"
+        aria-label="Next subtitle"
       >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12.01 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/>
         </svg>
-        <span className="absolute text-[9px] font-bold" style={{ bottom: '9px', left: '6px' }}>5</span>
       </button>
     </div>
   )
